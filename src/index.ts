@@ -1,7 +1,7 @@
 import { NextFunction, Request, Response } from 'express';
 import usersRoute from './routes/usersRoute';
 import { Kafka, logLevel, Partitioners } from 'kafkajs';
-const eurekaHelper = require('./eureka.helper');
+const eurekaHelper = require('./eurekaHelper');
 
 const express = require('express')
 const app = express()
