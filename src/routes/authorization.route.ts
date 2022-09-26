@@ -9,12 +9,12 @@ const authorizationRoute = Router();
 
 authorizationRoute.post('/token', async (req: Request, res: Response, next: NextFunction) => {
     try {
-        const user = await userRepository.findByUsernameAndPassword(req.body.username, req.body.password);;
+        const user = await userRepository.findByNameAndPassword(req.body.email, req.body.password);;
         if (!user) {
             throw new ForbiddenError('Usuario não informado!');
         }
-        const jwtPayload = { username: user.username };
-        const jwtOptions = { subject: user?.uuid, expiresIn: 600000 };
+        const jwtPayload = { name: user.name };
+        const jwtOptions = { subject: String(user?.user_id), expiresIn: 600000 };
         const secretKey = 'my_secret_key'
         const jwt = JWT.sign(jwtPayload, secretKey, jwtOptions);
 
@@ -30,7 +30,8 @@ authorizationRoute.post('/token', async (req: Request, res: Response, next: Next
 
 
 authorizationRoute.post('/token/validate', jwtAuthenticationMiddleware, (req: Request, res: Response, next: NextFunction) => {
-    res.sendStatus(StatusCodes.OK);
+    console.log(req.user)
+    res.status(StatusCodes.OK).send(req.user);
 })
 
 export default authorizationRoute;

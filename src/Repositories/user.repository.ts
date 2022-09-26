@@ -1,27 +1,30 @@
 import User from "../models/user.model";
 import db from "../routes/db";
 import DatabaseError from "../models/errors/database.error.model";
+import { response } from "express";
+import bcrypt from 'bcryptjs'
+import { v4 as uuidv4 } from 'uuid';
 
 
 class userRepository {
 
     async findAllUsers(): Promise<User[]> {
         const query = `
-            SELECT uuid, name
+            SELECT user_id, name, email
             FROM application_user
         `;
         const { rows } = await db.query<User>(query);
         return rows || [];
     }
 
-    async findById(uuid: string): Promise<User> {
+    async findById(user_id: string): Promise<User> {
         try {
             const query = `
-                SELECT uuid, name
+                SELECT user_id, name
                 FROM application_user
-                WHERE uuid = $1       
+                WHERE user_id = $1       
             `;
-            const values = [uuid]
+            const values = [user_id]
             const { rows } = await db.query<User>(query, values);
             const [user] = rows;
             return user;
@@ -32,20 +35,25 @@ class userRepository {
 
     }
 
-    async findByNameAndPassword(name: string, password: string): Promise<User | null> {
+    async findByNameAndPassword(email: string, password: string): Promise<User | null> {
         try {
             const query = `
-                SELECT uuid, name
-                FROM applicantion_user
-                WHERE name = $1
-                AND password = crypt($2, 'my_salt')
+                SELECT user_id, name, password
+                FROM application_user
+                WHERE email = $1
         
         `;
-            const values = [name, password];
+
+            const values = [email];
             const { rows } = await db.query<User>(query, values);
             const [user] = rows;
-            return user || null;
+            const ispassword = await bcrypt.compare(password, user.password)
+            if (ispassword) {
+                return user
+            }
+            else return null
         } catch (error) {
+            console.log(error)
             throw new DatabaseError('Erro na consulta por name e password', error);
         }
 
@@ -56,18 +64,27 @@ class userRepository {
         const script = `
             INSERT INTO application_user (
                 name,
-                email,
                 password,
+                email,
                 sendemail,
-                
+                user_id
             )
-            VALUES ($1,$2, crypt($3, 'my_salt'),$4)
-            RETURNING uuid
+            VALUES ($1,$2,$3,$4,$5)
+            RETURNING user_id
         `;
-        const values = [user.name, user.email, user.password, user.sendemail];
-        const { rows } = await db.query<{ uuid: string }>(script, values);
-        const [newUser] = rows;
-        return newUser.uuid;
+        const salt = await bcrypt.genSalt()
+        const hash = await bcrypt.hash(user.password, salt)
+        const values = [user.name, hash, user.email, user.sendemail, uuidv4()];
+        try {
+            const { rows } = await db.query<{ user_id: string }>(script, values);
+            const [newUser] = rows;
+            return newUser.user_id;
+        } catch (error) {
+            console.log(error)
+            return 'usuario não criado'
+        }
+
+
     }
 
     async update(user: User): Promise<void> {
@@ -77,20 +94,20 @@ class userRepository {
                 name = $1,
                 password = crypt($2, 'my_salt')
             
-            WHERE uuid = $3
+            WHERE user_id = $3
         `;
-        const values = [user.name, user.password, user.uuid];
-        await db.query<{ uuid: string }>(script, values);
+        const values = [user.name, user.password, user.user_id];
+        await db.query<{ user_id: string }>(script, values);
 
     }
 
-    async remove(uuid: string): Promise<void> {
+    async remove(user_id: string): Promise<void> {
         const script = `
             DELETE
             FROM application_user
-            WHERE uuid = $1
+            WHERE user_id = $1
         `;
-        const values = [uuid];
+        const values = [user_id];
         await db.query(script, values);
 
     }
