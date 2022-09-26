@@ -25,14 +25,14 @@ usersRoute.get('/users/:uuid', async (req: Request<{ uuid: string }>, res: Respo
 usersRoute.post('/users', async (req: Request, res: Response, next: NextFunction) => {
     const newUser = req.body
     console.log(newUser)
-    const uuid = await userRepository.create(newUser);
-    // await req.producer.send({
-    //     topic: 'user-topic',
-    //     messages: [
-    //         { value: newUser.email },
-    //     ],
-    // })
-    res.status(StatusCodes.CREATED).send(newUser);
+    const user = await userRepository.create(newUser);
+    await req.producer.send({
+        topic: 'user-topic',
+        messages: [
+            { value: JSON.stringify(user) },
+        ],
+    })
+    res.status(StatusCodes.CREATED).send(user);
 
 });
 

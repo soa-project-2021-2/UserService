@@ -60,7 +60,7 @@ class userRepository {
 
     }
 
-    async create(user: User): Promise<string> {
+    async create(user: User): Promise<User> {
         const script = `
             INSERT INTO application_user (
                 name,
@@ -70,18 +70,18 @@ class userRepository {
                 user_id
             )
             VALUES ($1,$2,$3,$4,$5)
-            RETURNING user_id
+            RETURNING user_id, name, email
         `;
         const salt = await bcrypt.genSalt()
         const hash = await bcrypt.hash(user.password, salt)
         const values = [user.name, hash, user.email, user.sendemail, uuidv4()];
         try {
-            const { rows } = await db.query<{ user_id: string }>(script, values);
+            const { rows } = await db.query<User>(script, values);
             const [newUser] = rows;
-            return newUser.user_id;
+            return newUser;
         } catch (error) {
             console.log(error)
-            return 'usuario não criado'
+            throw error
         }
 
 
