@@ -7,7 +7,7 @@ import jwtAuthenticationMiddleware from "../middleware/jwt-authentication.middle
 
 const authorizationRoute = Router();
 
-authorizationRoute.post('/token', async (req: Request, res: Response, next: NextFunction) => {
+authorizationRoute.post('/login', async (req: Request, res: Response, next: NextFunction) => {
     try {
         const user = await userRepository.findByNameAndPassword(req.body.email, req.body.password);;
         if (!user) {
@@ -29,7 +29,7 @@ authorizationRoute.post('/token', async (req: Request, res: Response, next: Next
 })
 
 
-authorizationRoute.post('/token/validate', jwtAuthenticationMiddleware, (req: Request, res: Response, next: NextFunction) => {
+authorizationRoute.post('/token', jwtAuthenticationMiddleware, (req: Request, res: Response, next: NextFunction) => {
     console.log(req.user)
     res.status(StatusCodes.OK).send(req.user);
 })
