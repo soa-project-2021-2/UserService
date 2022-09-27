@@ -66,15 +66,14 @@ class userRepository {
                 name,
                 password,
                 email,
-                sendemail,
-                user_id
+                sendemail
             )
-            VALUES ($1,$2,$3,$4,$5)
-            RETURNING user_id, name, email
+            VALUES ($1,$2,$3,$4)
+            RETURNING name, email
         `;
         const salt = await bcrypt.genSalt()
         const hash = await bcrypt.hash(user.password, salt)
-        const values = [user.name, hash, user.email, user.sendemail, uuidv4()];
+        const values = [user.name, hash, user.email, user.sendemail];
         try {
             const { rows } = await db.query<User>(script, values);
             const [newUser] = rows;
