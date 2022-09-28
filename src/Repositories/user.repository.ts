@@ -87,7 +87,8 @@ class userRepository {
     }
 
     async update(user: User): Promise<void> {
-        const script = `
+        try {
+            const script = `
             UPDATE application_user
             SET
                 name = $1,
@@ -95,20 +96,27 @@ class userRepository {
             
             WHERE user_id = $3
         `;
-        const values = [user.name, user.password, user.user_id];
-        await db.query<{ user_id: string }>(script, values);
+            const values = [user.name, user.password, user.user_id];
+            await db.query<{ user_id: string }>(script, values);
+        } catch (error) {
+            throw new DatabaseError('Erro ao mudar usuario', error);
+        }
+
 
     }
 
     async remove(user_id: string): Promise<void> {
-        const script = `
+        try {
+            const script = `
             DELETE
             FROM application_user
             WHERE user_id = $1
         `;
-        const values = [user_id];
-        await db.query(script, values);
-
+            const values = [user_id];
+            await db.query(script, values);
+        } catch (error) {
+            throw new DatabaseError('Erro ao deletar usuario', error);
+        }
     }
 
 }

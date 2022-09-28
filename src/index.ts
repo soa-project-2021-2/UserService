@@ -5,9 +5,10 @@ const eurekaHelper = require('./eurekaHelper');
 import db from './routes/db';
 import authorizationRoute from './routes/authorization.route';
 
+const port = 8000
 const express = require('express')
-const app = express()
-const port = 3000
+const app = express({ port: port })
+
 db.connect()
 eurekaHelper.registerWithEureka('user-service', port);
 // try {

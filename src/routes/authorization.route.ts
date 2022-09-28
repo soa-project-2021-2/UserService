@@ -14,14 +14,14 @@ authorizationRoute.post('/login', async (req: Request, res: Response, next: Next
             throw new ForbiddenError('Usuario não informado!');
         }
         const jwtPayload = { name: user.name };
-        const jwtOptions = { subject: String(user?.user_id), expiresIn: 600000 };
+        const jwtOptions = { subject: String(user?.user_id), expiresIn: 60000 };
         const secretKey = 'my_secret_key'
         const jwt = JWT.sign(jwtPayload, secretKey, jwtOptions);
 
         res.status(StatusCodes.OK).json({ token: jwt });
 
     } catch (error) {
-        next(error);
+        res.sendStatus(401)
     }
 
 
@@ -29,9 +29,20 @@ authorizationRoute.post('/login', async (req: Request, res: Response, next: Next
 })
 
 
-authorizationRoute.post('/token', jwtAuthenticationMiddleware, (req: Request, res: Response, next: NextFunction) => {
-    console.log(req.user)
-    res.status(StatusCodes.OK).send(req.user);
+authorizationRoute.post('/token', jwtAuthenticationMiddleware, async (req: Request, res: Response, next: NextFunction) => {
+    try {
+        const user = await userRepository.findById(req.user.uuid)
+        if (user.name === req.user.name) {
+            res.status(StatusCodes.OK).send(req.user);
+        }
+        else {
+            res.status(StatusCodes.UNAUTHORIZED).send('token Invalido')
+        }
+
+    } catch (error) {
+        res.status(StatusCodes.UNAUTHORIZED).send('token Invalido')
+    }
+
 })
 
 export default authorizationRoute;
