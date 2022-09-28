@@ -69,7 +69,7 @@ class userRepository {
                 sendemail
             )
             VALUES ($1,$2,$3,$4)
-            RETURNING name, email
+            RETURNING user_id, name, email, sendemail
         `;
         const salt = await bcrypt.genSalt()
         const hash = await bcrypt.hash(user.password, salt)
