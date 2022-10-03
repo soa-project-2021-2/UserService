@@ -5,7 +5,7 @@ const eurekaHelper = require('./eurekaHelper');
 import db from './routes/db';
 import authorizationRoute from './routes/authorization.route';
 
-const port = 8000
+const port = 8800
 const express = require('express')
 const app = express({ port: port })
 
